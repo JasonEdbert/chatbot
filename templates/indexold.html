@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Index</title>
+    <!-- Menghubungkan ke file CSS Anda yang ada di folder static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Overlay gelap saat sidebar terbuka -->
+    <div class="sidebar-overlay"   onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar History -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Riwayat Chat</h3>
+            <button class="btn-close-sidebar" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-new">
+            <button class="btn-sidebar-newchat" onclick="resetChat()">New Chat</button>
+        </div>
+        <div class="sidebar-list" id="sidebar-list">
+            <div class="history-item">
+                <span>Percakapan 1</span>
+            </div>
+            <div class="history-item">
+                <span>Percakapan 2</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-newchat">
+            <button onclick="toggleSidebar()" class="btn-history">&times;</button>
+            <button onclick="resetChat()" class="btn-reset">New Chat</button>
+        </div>
+        <div class="chat-wrapper">
+            <div class="chat-header">
+                <h2>AI Chatbot</h2>
+            </div>
+            <!-- Area Input Pengguna -->
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ketik pesan Anda di sini..." onkeypress="handleEnter(event)">
+                <button onclick="kirimPesan()" class="btn-send">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk membuka/menutup sidebar riwayat chat
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        // Fungsi untuk mengirim pesan ke Flask
+        function kirimPesan() {
+            const inputField = document.getElementById('user-input');
+            const pesan = inputField.value.trim();
+            
+            // Jika input kosong, jangan lakukan apa-apa
+            if (pesan === "") return;
+
+            const chatBox = document.getElementById('chat-box');
+            
+            sessionStorage.setItem('pesanAwal', pesan);
+            window.location.href = '/chat';
+        }
+
+        // Fungsi agar bisa mengirim pesan hanya dengan menekan tombol 'Enter' di keyboard
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                kirimPesan();
+            }
+        }
+
+        // Fungsi untuk mereset riwayat chat melalui tombol Reset
+        function resetChat() {
+            if (confirm("Apakah Anda yakin ingin menghapus seluruh riwayat obrolan?")) {
+                fetch('/reset_chat', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.status);
+                    // Bersihkan layar HTML dan kembalikan ke pesan sambutan awal
+                    document.getElementById('chat-box').innerHTML = `
+                        <div class="message bot-message">
+                            <p>Halo! Ada yang bisa saya bantu hari ini?</p>
+                        </div>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>

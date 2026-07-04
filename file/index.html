@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Index</title>
+    <!-- Menghubungkan ke file CSS Anda yang ada di folder static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Overlay gelap saat sidebar terbuka -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar History -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Riwayat Chat</h3>
+            <button class="btn-close-sidebar" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <div class="sidebar-new">
+            <button class="btn-sidebar-newchat" onclick="resetChat()">New Chat</button>
+        </div>
+        <div class="sidebar-list" id="sidebar-list">
+            <!-- History items akan diisi oleh JavaScript -->
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-newchat">
+            <button onclick="toggleSidebar()" class="btn-history">&times;</button>
+            <button onclick="resetChat()" class="btn-reset">New Chat</button>
+        </div>
+        <div class="chat-wrapper">
+            <div class="chat-header">
+                <h2>AI Chatbot</h2>
+            </div>
+            <!-- Area Input Pengguna -->
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Ketik pesan Anda di sini..." onkeypress="handleEnter(event)">
+                <button onclick="kirimPesan()" class="btn-send">Kirim</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk membuka/menutup sidebar riwayat chat
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        // Fungsi untuk mengirim pesan ke Flask
+        function kirimPesan() {
+            const inputField = document.getElementById('user-input');
+            const pesan = inputField.value.trim();
+            
+            // Jika input kosong, jangan lakukan apa-apa
+            if (pesan === "") return;
+
+            const chatBox = document.getElementById('chat-box');
+            
+            sessionStorage.setItem('pesanAwal', pesan);
+            window.location.href = '/chat';
+        }
+
+        // Fungsi agar bisa mengirim pesan hanya dengan menekan tombol 'Enter' di keyboard
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                kirimPesan();
+            }
+        }
+
+        // Fungsi untuk mereset riwayat chat melalui tombol Reset
+        function resetChat() {
+            if (confirm("Apakah Anda yakin ingin menghapus seluruh riwayat obrolan?")) {
+                fetch('/reset_chat', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.status);
+                    // Bersihkan layar HTML dan kembalikan ke pesan sambutan awal
+                    document.getElementById('chat-box').innerHTML = `
+                        <div class="message bot-message">
+                            <p>Halo! Ada yang bisa saya bantu hari ini?</p>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // ============================================================
+        // KODE BARU: Sistem History Chat menggunakan localStorage
+        // ============================================================
+
+        // Kunci localStorage untuk menyimpan semua sesi chat
+        const HISTORY_KEY = 'chatHistoryList';
+
+        // Ambil semua sesi history dari localStorage
+        function getAllHistory() {
+            const raw = localStorage.getItem(HISTORY_KEY);
+            return raw ? JSON.parse(raw) : [];
+        }
+
+        // Render ulang daftar history di sidebar
+        function renderSidebarHistory() {
+            const list = document.getElementById('sidebar-list');
+            const histories = getAllHistory();
+            list.innerHTML = '';
+
+            if (histories.length === 0) {
+                list.innerHTML = '<p style="color:#888;font-size:0.85rem;padding:10px 20px;">Belum ada riwayat chat.</p>';
+                return;
+            }
+
+            // Tampilkan dari yang terbaru ke terlama
+            [...histories].reverse().forEach(function(sesi) {
+                const item = document.createElement('div');
+                item.className = 'history-item history-item-real';
+                item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:6px;';
+
+                const judulEl = document.createElement('span');
+                judulEl.textContent = sesi.judul;
+                judulEl.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;';
+                judulEl.title = sesi.judul;
+
+                // Klik judul → muat percakapan ini
+                judulEl.addEventListener('click', function() {
+                    muatPercakapan(sesi.id);
+                });
+
+                // Tombol hapus per item
+                const btnHapus = document.createElement('button');
+                btnHapus.innerHTML = '&times;';
+                btnHapus.title = 'Hapus percakapan ini';
+                btnHapus.style.cssText = 'background:none;border:none;color:#888;font-size:1rem;cursor:pointer;flex-shrink:0;padding:0 2px;line-height:1;';
+                btnHapus.addEventListener('mouseenter', function() { this.style.color = '#ff6b6b'; });
+                btnHapus.addEventListener('mouseleave', function() { this.style.color = '#888'; });
+                btnHapus.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    hapusPercakapan(sesi.id);
+                });
+
+                item.appendChild(judulEl);
+                item.appendChild(btnHapus);
+                list.appendChild(item);
+            });
+        }
+
+        // Muat percakapan dari history ke halaman chat
+        function muatPercakapan(id) {
+            sessionStorage.setItem('loadHistoryId', id);
+            toggleSidebar();
+            window.location.href = '/chat';
+        }
+
+        // Hapus satu sesi percakapan dari history
+        function hapusPercakapan(id) {
+            let histories = getAllHistory();
+            histories = histories.filter(function(s) { return s.id !== id; });
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+            renderSidebarHistory();
+        }
+
+        // Override fungsi kirimPesan yang sudah ada untuk menyimpan sesi baru
+        const _kirimPesanAsli = kirimPesan;
+        kirimPesan = function() {
+            const inputField = document.getElementById('user-input');
+            const pesan = inputField.value.trim();
+            if (pesan === '') return;
+
+            // Buat sesi baru dan simpan ke history
+            const sesiId = 'sesi_' + Date.now();
+            const histories = getAllHistory();
+            histories.push({
+                id: sesiId,
+                judul: pesan.length > 40 ? pesan.substring(0, 40) + '…' : pesan,
+                messages: [],
+                waktu: new Date().toISOString()
+            });
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(histories));
+
+            // Simpan ID sesi aktif agar chat.html bisa melanjutkan penyimpanan
+            sessionStorage.setItem('aktivSesiId', sesiId);
+            sessionStorage.setItem('pesanAwal', pesan);
+            window.location.href = '/chat';
+        };
+
+        // Jalankan render history saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSidebarHistory();
+        });
+
+        // ============================================================
+        // AKHIR KODE BARU
+        // ============================================================
+    </script>
+</body>
+</html>

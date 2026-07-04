@@ -1,0 +1,132 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url(https://st.depositphotos.com/1203257/1718/i/450/depositphotos_17180113-stock-photo-black-background.jpg);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Kotak Utama Chatbot */
+.chat-container {
+    width: 100%;
+    height: 95vh;
+    background: #ff000000;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Bagian Header Atas */
+
+.chat-newchat{
+    text-align: right;
+}
+
+.chat-header {
+    background: rgba(220, 20, 60, 0);
+    color: rgb(255, 255, 255);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.btn-reset {
+    background: rgba(121, 6, 29, 0);
+    border: none;
+    color: 
+    white;
+    padding: 6px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Area Tampilan Pesan (Bisa di-scroll) */
+.chat-box {
+    flex: 1;
+    padding: 15px;
+    background: #00000000;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Pengaturan Umum Balon Chat */
+.message {
+    max-width: 75%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    border: 1px solid #606060;
+    word-wrap: break-word;
+}
+
+.message p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+/* Balon Chat dari Bot (Sebelah Kiri) */
+.bot-message {
+    background: #e4e6eb00;
+    color: #ffffff;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+/* Balon Chat dari User (Sebelah Kanan) */
+.user-message {
+    background: #606060;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+/* Area Input Pesan di Bagian Bawah */
+.chat-input-area {
+    display: flex;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0);
+    border-top: 1px solid #606060;
+    gap: 10px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 10px 15px;
+    color: #ffffff;
+    background: transparent;
+    border: 1px solid #606060;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.95rem;
+}
+
+.chat-input-area input:focus {
+    border-color: #0084ff;
+}
+
+.btn-send {
+    background: transparent;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-send:hover {
+    background: #6060607e;
+}
